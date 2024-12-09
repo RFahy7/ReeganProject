@@ -5,7 +5,7 @@ import pandas as pd
 st.set_page_config(page_title="Predicting Amazon Stock Prices Using Headlines", layout="wide")
 
 #Title
-st.title(""Predicting Amazon Stock Prices Using Headlines")
+st.title("Predicting Amazon Stock Prices Using Headlines")
      
 
 

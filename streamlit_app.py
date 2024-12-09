@@ -38,6 +38,24 @@ if st.button("Process Headlines"):
         st.write("VADER Sentiment Scores per Headline:")
         st.write(sentiment_scores)
 
+        # Calculate average sentiment score
+        average_score = sum(sentiment_scores) / len(sentiment_scores)
+
+        # Categorize average score
+        if average_score >= 0.05:
+            sentiment_category = "Positive"
+        elif average_score <= -0.05:
+            sentiment_category = "Negative"
+        else:
+            sentiment_category = "Neutral"
+
+        # Calculate percentage
+        sentiment_percentage = abs(average_score) * 100
+
+        # Display average sentiment and percentage
+        st.write(f"The averaged sentiment of the headlines is: **{sentiment_category}**")
+        st.write(f"Sentiment Confidence: **{sentiment_percentage:.2f}%**")
+
         # Load the vectorizer
         vectorizer = joblib.load('vectorizer.joblib')
 

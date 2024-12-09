@@ -23,37 +23,41 @@ sia = SentimentIntensityAnalyzer()
 
 # Process headlines
 if st.button("Process Headlines"):
-    if today_headline_input and yesterday_headline_input and current_price:
+    if today_headline_input and yesterday_headline_input:
         # Function to compute average sentiment score
         def compute_average_sentiment(headlines):
             scores = [sia.polarity_scores(h)['compound'] for h in headlines]
             return sum(scores) / len(scores) if scores else 0.0
 
 
-        # Split input into separate headlines and calculate average sentiment score for both days
-        today_headlines = today_headline_input.splitlines()
-        yesterday_headlines = yesterday_headline_input.splitlines()
-
-        today_average_sentiment = compute_average_sentiment(today_headlines)
-        yesterday_average_sentiment = compute_average_sentiment(yesterday_headlines)
+        # Calculate average sentiment score
+        today_average_sentiment = compute_average_sentiment(today_headline_input.splitlines())
+        yesterday_average_sentiment = compute_average_sentiment(yesterday_headline_input.splitlines())
 
         # Display sentiment results
         st.write(f"Today's sentiment score: {today_average_sentiment:.2f}")
         st.write(f"Yesterday's sentiment score: {yesterday_average_sentiment:.2f}")
 
-        # Prepare features for Ridge regression
-        features = np.array([[today_average_sentiment, yesterday_average_sentiment, current_price]])
+        # Prepare features for Ridge model
+        features = np.array([[today_average_sentiment, yesterday_average_sentiment]])
 
-        # Load the Ridge model
+        # Load and predict with the Ridge model
         try:
             ridge_model = joblib.load('ridge.joblib')
             st.success("Ridge model loaded successfully.")
 
-            # Predict with the Ridge model
-            predicted_price_tomorrow = ridge_model.predict(features)
-            st.write(f"Predicted Stock Price for Tomorrow: {predicted_price_tomorrow[0]:.2f}")
+            # Predict the change in price
+            predicted_change = ridge_model.predict(features)[0]
+            st.write(f"Predicted Change in Stock Price: {predicted_change:.2f}")
+
+            # Calculate the predicted stock price for tomorrow
+            predicted_price_tomorrow = current_price + predicted_change
+            st.write(f"Predicted Stock Price for Tomorrow: {predicted_price_tomorrow:.2f}")
+
         except FileNotFoundError:
-            st.error("Ridge model file not found. Please upload or verify the location of 'ridge.joblib'.")
+            st.error("Ridge model file not found. Please verify the location of 'ridge.joblib'.")
+        except ValueError as e:
+            st.error(f"Prediction error: {e}")
 
     else:
         st.warning("Please ensure all fields are filled out: headlines for today, yesterday, and today's stock price.")

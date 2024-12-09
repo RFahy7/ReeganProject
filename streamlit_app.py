@@ -4,7 +4,7 @@ import joblib
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 import nltk
 
-# Ensure the VADER lexicon is downloaded
+
 nltk.download('vader_lexicon')
 
 # Page title
@@ -28,7 +28,6 @@ if st.button("Process Headlines"):
         def compute_average_sentiment(headlines):
             scores = [sia.polarity_scores(h)['compound'] for h in headlines]
             return sum(scores) / len(scores) if scores else 0.0
-
 
         # Calculate average sentiment score
         today_average_sentiment = compute_average_sentiment(today_headline_input.splitlines())

@@ -4,7 +4,6 @@ import numpy as np
 import joblib
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 import nltk
-from sklearn.linear_model import Ridge
 
 # Ensure the VADER lexicon is downloaded
 nltk.download('vader_lexicon')
@@ -46,15 +45,16 @@ if st.button("Process Headlines"):
         # Prepare features for Ridge regression
         features = np.array([[today_average_sentiment, yesterday_average_sentiment]])
 
-        # Load the pre-trained Ridge model
-        if 'ridge.joblib' in st.secrets:  # path can also be given directly if not using st.secrets
+        # Load the Ridge model
+        try:
             ridge_model = joblib.load('ridge.joblib')
-            # Prediction can be made here
-            prediction = ridge_model.predict(features)
-            st.write(f"Predicted Stock Price: {prediction}")
             st.success("Ridge model loaded successfully.")
-        else:
-            st.warning("Ridge model file not found. Please check the path.")
+
+            # Predict with the Ridge model
+            prediction = ridge_model.predict(features)
+            st.write(f"Predicted Stock Price Change: {prediction[0]:.2f}")
+        except FileNotFoundError:
+            st.error("Ridge model file not found. Please upload or verify the location of 'ridge.joblib'.")
 
     else:
         st.warning("Please enter headlines for both today and yesterday.")

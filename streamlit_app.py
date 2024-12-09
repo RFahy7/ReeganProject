@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import numpy as np
 import joblib
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 import nltk
@@ -13,55 +14,52 @@ st.set_page_config(page_title="Predicting Amazon Stock Prices Using Headlines", 
 # Title
 st.title("Predicting Amazon Stock Prices Using Headlines")
 
-# User input
-headline_input = st.text_area("Enter one or more headlines (separated by new lines):")
+# Collect user input for today's headlines
+today_headline_input = st.text_area("Enter today's headlines (separated by new lines):")
+yesterday_headline_input = st.text_area("Enter yesterday's headlines (separated by new lines):")
 current_price = st.number_input("Enter today's price of Amazon stock:", min_value=0.0, format="%.2f")
 
 # Load the SentimentIntensityAnalyzer
 sia = SentimentIntensityAnalyzer()
 
-# Vectorize input
+# Process headlines
 if st.button("Process Headlines"):
-    if headline_input:
-        # Split input into separate headlines
-        headlines = headline_input.splitlines()
+    if today_headline_input and yesterday_headline_input:
+        # Function to compute average sentiment score
+        def compute_average_sentiment(headlines):
+            scores = [sia.polarity_scores(h)['compound'] for h in headlines]
+            return sum(scores) / len(scores) if scores else 0.0
 
-        # List to store sentiment scores
-        sentiment_scores = []
 
-        # Calculate the VADER sentiment score for each headline
-        for headline in headlines:
-            score = sia.polarity_scores(headline)  # VADER returns a dictionary
-            sentiment_scores.append(score['compound'])  # Use the compound score
+        # Split input into separate headlines and calculate average sentiment score for both days
+        today_headlines = today_headline_input.splitlines()
+        yesterday_headlines = yesterday_headline_input.splitlines()
 
-        # Display the sentiment scores
-        st.write("VADER Sentiment Scores per Headline:")
-        st.write(sentiment_scores)
+        today_average_sentiment = compute_average_sentiment(today_headlines)
+        yesterday_average_sentiment = compute_average_sentiment(yesterday_headlines)
 
-        # Calculate average sentiment score
-        average_score = sum(sentiment_scores) / len(sentiment_scores)
-        # Categorize average score
-        if average_score >= 0.05:
-            sentiment_category = "Positive"
-        elif average_score <= -0.05:
-            sentiment_category = "Negative"
-        else:
-            sentiment_category = "Neutral"
-        # Calculate percentage
-        sentiment_percentage = abs(average_score) * 100
-        # Display average sentiment and percentage
-        st.write(f"The averaged sentiment of the headlines is: **{sentiment_category}**")
-        st.write(f"Sentiment Confidence: **{sentiment_percentage:.2f}%**")
+        # Display sentiment results
+        st.write(f"Today's sentiment score: {today_average_sentiment:.2f}")
+        st.write(f"Yesterday's sentiment score: {yesterday_average_sentiment:.2f}")
+
         # Load the vectorizer
         vectorizer = joblib.load('vectorizer.joblib')
 
-        # Transform the sentiment scores into vectorizer
-        scores_df = pd.DataFrame(sentiment_scores, columns=['sentiment'])
-        headline_tfidf = vectorizer.transform(scores_df['sentiment'].values.astype('U'))
+        # Prepare features for Ridge regression
+        feature_array = np.array([[today_average_sentiment, yesterday_average_sentiment]])
 
-        # You can now use the transformed data in your model or display some transformation details
-        st.write("Sample of TF-IDF feature representation based on sentiment scores:")
-        st.write(pd.DataFrame(headline_tfidf.toarray(), columns=vectorizer.get_feature_names_out()).head(10))
+        # Vectorize the average sentiment scores
+        feature_tfidf = vectorizer.transform(feature_array.astype('U'))
 
+        # Display TF-IDF representation
+        st.write("TF-IDF feature representation for sentiment scores:")
+        st.write(pd.DataFrame(feature_tfidf.toarray(), columns=vectorizer.get_feature_names_out()).head(10))
+
+        # Placeholder for Ridge model processing
+        # ridge = Ridge()  # Uncomment and load your trained Ridge model as needed
+        # ridge_result = ridge.predict(...)  # Use the features to predict or implement your logic
+
+        # Save the Ridge model (or results as relevant)
+        # joblib.dump(ridge, 'ridge.joblib')  # Uncomment if you need to save the Ridge model
     else:
-        st.warning("Please enter at least one headline.")
+        st.warning("Please enter headlines for both today and yesterday.")

@@ -1,5 +1,4 @@
 import streamlit as st
-import pandas as pd
 import numpy as np
 import joblib
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
@@ -24,7 +23,7 @@ sia = SentimentIntensityAnalyzer()
 
 # Process headlines
 if st.button("Process Headlines"):
-    if today_headline_input and yesterday_headline_input:
+    if today_headline_input and yesterday_headline_input and current_price:
         # Function to compute average sentiment score
         def compute_average_sentiment(headlines):
             scores = [sia.polarity_scores(h)['compound'] for h in headlines]
@@ -43,7 +42,7 @@ if st.button("Process Headlines"):
         st.write(f"Yesterday's sentiment score: {yesterday_average_sentiment:.2f}")
 
         # Prepare features for Ridge regression
-        features = np.array([[today_average_sentiment, yesterday_average_sentiment]])
+        features = np.array([[today_average_sentiment, yesterday_average_sentiment, current_price]])
 
         # Load the Ridge model
         try:
@@ -51,10 +50,10 @@ if st.button("Process Headlines"):
             st.success("Ridge model loaded successfully.")
 
             # Predict with the Ridge model
-            prediction = ridge_model.predict(features)
-            st.write(f"Predicted Stock Price Change: {prediction[0]:.2f}")
+            predicted_price_tomorrow = ridge_model.predict(features)
+            st.write(f"Predicted Stock Price for Tomorrow: {predicted_price_tomorrow[0]:.2f}")
         except FileNotFoundError:
             st.error("Ridge model file not found. Please upload or verify the location of 'ridge.joblib'.")
 
     else:
-        st.warning("Please enter headlines for both today and yesterday.")
+        st.warning("Please ensure all fields are filled out: headlines for today, yesterday, and today's stock price.")

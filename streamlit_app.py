@@ -34,7 +34,7 @@ if st.button("Process Headlines"):
         # Calculate the VADER sentiment score for each headline
         for headline in headlines1:
             score1 = sia.polarity_scores(headline)  # VADER returns a dictionary
-            sentiment_scores1.append(score['compound'])  # Use the compound score
+            sentiment_scores1.append(score1['compound'])  # Use the compound score
 
         # Display the sentiment scores
         st.write("TODAY: VADER Sentiment Scores per Headline:")

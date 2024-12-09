@@ -1,3 +1,11 @@
-streamlit
 pandas
+numpy
+matplotlib
+scikit-learn
+scipy
+xgboost
+python-dateutil
+nltk
+seaborn
+streamlit
 joblib

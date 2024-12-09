@@ -4,6 +4,7 @@ import numpy as np
 import joblib
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 import nltk
+from sklearn.linear_model import Ridge
 
 # Ensure the VADER lexicon is downloaded
 nltk.download('vader_lexicon')
@@ -14,7 +15,7 @@ st.set_page_config(page_title="Predicting Amazon Stock Prices Using Headlines", 
 # Title
 st.title("Predicting Amazon Stock Prices Using Headlines")
 
-# Collect user input for today's headlines
+# Collect user input for today's and yesterday's headlines
 today_headline_input = st.text_area("Enter today's headlines (separated by new lines):")
 yesterday_headline_input = st.text_area("Enter yesterday's headlines (separated by new lines):")
 current_price = st.number_input("Enter today's price of Amazon stock:", min_value=0.0, format="%.2f")
@@ -42,24 +43,18 @@ if st.button("Process Headlines"):
         st.write(f"Today's sentiment score: {today_average_sentiment:.2f}")
         st.write(f"Yesterday's sentiment score: {yesterday_average_sentiment:.2f}")
 
-        # Load the vectorizer
-        vectorizer = joblib.load('vectorizer.joblib')
-
         # Prepare features for Ridge regression
-        feature_array = np.array([[today_average_sentiment, yesterday_average_sentiment]])
+        features = np.array([[today_average_sentiment, yesterday_average_sentiment]])
 
-        # Vectorize the average sentiment scores
-        feature_tfidf = vectorizer.transform(feature_array.astype('U'))
+        # Load the pre-trained Ridge model
+        if 'ridge.joblib' in st.secrets:  # path can also be given directly if not using st.secrets
+            ridge_model = joblib.load('ridge.joblib')
+            # Prediction can be made here
+            prediction = ridge_model.predict(features)
+            st.write(f"Predicted Stock Price: {prediction}")
+            st.success("Ridge model loaded successfully.")
+        else:
+            st.warning("Ridge model file not found. Please check the path.")
 
-        # Display TF-IDF representation
-        st.write("TF-IDF feature representation for sentiment scores:")
-        st.write(pd.DataFrame(feature_tfidf.toarray(), columns=vectorizer.get_feature_names_out()).head(10))
-
-        # Placeholder for Ridge model processing
-        # ridge = Ridge()  # Uncomment and load your trained Ridge model as needed
-        # ridge_result = ridge.predict(...)  # Use the features to predict or implement your logic
-
-        # Save the Ridge model (or results as relevant)
-        # joblib.dump(ridge, 'ridge.joblib')  # Uncomment if you need to save the Ridge model
     else:
         st.warning("Please enter headlines for both today and yesterday.")
